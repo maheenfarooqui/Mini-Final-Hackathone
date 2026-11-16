@@ -199,16 +199,7 @@ function LandingPage({ onAuth }) {
           <div className="landing-square landing-square-sky" />
           <div className="landing-dots" />
           <motion.div className="landing-doctor-illustration" animate={{ y: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
-            <div className="illustration-glow" />
-            <div className="illustration-cross">+</div>
-            <div className="illustration-person">
-              <span className="illustration-hair" />
-              <span className="illustration-face" />
-              <span className="illustration-neck" />
-              <span className="illustration-coat" />
-              <span className="illustration-shirt" />
-              <span className="illustration-stethoscope"><i /></span>
-            </div>
+            <img className="landing-doctor-photo" src="/images/doctor-hero.jpg" alt="Doctor wearing a white coat and stethoscope" />
             <div className="illustration-caption"><span>YOU CARE · YOUR CLINIC</span><strong>Here for<br />your health.</strong></div>
           </motion.div>
           <motion.div className="floating-care-card floating-visit-card" animate={{ y: [0, -8, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}>
