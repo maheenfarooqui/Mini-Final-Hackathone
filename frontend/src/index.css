@@ -168,6 +168,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .content-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(245px, .9fr); gap: 17px; }
 .panel { border: 1px solid #e9eef1; border-radius: 7px; background: #fff; }
 .upcoming-panel { min-height: 251px; padding: 19px 20px; }
+.doctor-activity-panel { padding: 19px 21px 10px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
 .panel-heading h2, .users-toolbar h2, .doctor-form-heading h2 { margin: 6px 0 0; color: #304558; font: 700 16px/1.3 var(--font-display); letter-spacing: -.35px; }
 .text-button { display: inline-flex; align-items: center; gap: 7px; border: 0; padding: 5px 0; color: #1888b5; background: transparent; font-size: 10px; font-weight: 700; white-space: nowrap; }
@@ -660,6 +661,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .metric-copy small { align-self: start; font-size: 8px; }
   .content-grid { gap: 11px; }
   .upcoming-panel { min-height: 0; padding: 16px 13px; }
+  .doctor-activity-panel { padding: 16px 13px 8px; }
   .panel-heading h2 { font-size: 14px; }
   .panel-heading { gap: 7px; }
   .text-button { gap: 4px; font-size: 9px; }

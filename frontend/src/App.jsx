@@ -756,7 +756,7 @@ function DoctorOverview({ user, appointments, onRequests }) {
         <MetricCard label="Approved visits" value={approved} note="Scheduled with patients" icon="check" tone="green" />
         <MetricCard label="Declined" value={rejected} note="Requests not accepted" icon="close" tone="lilac" />
       </section>
-      <section className="panel">
+      <section className="panel doctor-activity-panel">
         <div className="panel-heading"><div><Eyebrow>YOUR PATIENTS</Eyebrow><h2>Recent appointment activity</h2></div><button className="text-button" onClick={onRequests}>All requests <Icon name="arrow" size={16} /></button></div>
         {recent.length ? <div className="appointment-list">{recent.map((appointment) => <AppointmentRow key={appointment._id} appointment={appointment} role="doctor" />)}</div> : <EmptyState icon="calendar" title="No appointment requests yet" text="New patient requests will appear here." />}
       </section>
