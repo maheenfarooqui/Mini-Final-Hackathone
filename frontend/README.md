@@ -1,16 +1,22 @@
-# React + Vite
+# You Care Clinic frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Run locally
 
-Currently, two official plugins are available:
+1. Start the backend from `backend/` with `npm start`.
+2. Set `MONGO_URI` and `JWT_SECRET` in the backend environment, and seed the first administrator as described in the [backend setup guide](../backend/README.md).
+3. From `frontend/`, run `npm run dev`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The frontend connects to `http://localhost:3000/api` by default. To use another backend URL, create a frontend `.env` file with:
 
-## React Compiler
+```env
+VITE_API_URL=https://your-backend.example/api
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The API uses the backend's HTTP-only authentication cookie. The browser requests include credentials, so configure the backend `CLIENT_URL` to match the deployed frontend origin.
 
-## Expanding the ESLint configuration
+## Available scripts
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `npm run dev` — start the Vite development server.
+- `npm run build` — create a production build in `dist/`.
+- `npm run lint` — run ESLint.
+- `npm run preview` — preview the production build.

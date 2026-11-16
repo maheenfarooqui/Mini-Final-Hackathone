@@ -1,60 +1,59 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import authRoute from "./routes/auth.route.js";
-import productRoute from "./routes/product.route.js";
-import cartRoute from "./routes/cart.route.js";
-import orderRoute from "./routes/order.route.js";
-import postRoute from "./routes/post.route.js";
-import contactRoute from "./routes/contact.route.js";
-import passport from "./config/passport.js";
 import cors from "cors";
+import helmet from "helmet";
 import mongoose from "mongoose";
 import connectDb from "./db/db.js";
-import helmet from "helmet";
+import authRoute from "./routes/auth.route.js";
+import doctorRoute from "./routes/doctor.route.js";
+import appointmentRoute from "./routes/appointment.route.js";
+import adminRoute from "./routes/admin.route.js";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [
+      process.env.CLIENT_URL,
+      "https://al-nahal.vercel.app",
+      "http://localhost:5173",
+    ].filter(Boolean),
+    credentials: true,
+  })
+);
 app.use(helmet());
-let dbConnected = false;
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  });
+});
 
 app.use(async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       await connectDb();
     }
-
-    dbConnected = true;
-    next();
+    return next();
   } catch (error) {
     console.error("Database connection failed:", error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Database connection failed",
+      message: "Database connection failed.",
     });
   }
 });
 
-app.use(
-  cors({
-    origin: [
-      "https://al-nahal.vercel.app",
-      "http://localhost:5173",
-    ],
-    credentials: true,
-  }),
-);
-
-
-app.use(express.json());
-app.use(cookieParser());
-app.use(passport.initialize());
-
-
 app.use("/api/auth", authRoute);
-app.use("/api/product", productRoute);
-app.use("/api/cart", cartRoute);
-app.use("/api/orders", orderRoute);
-app.use("/api/contact", contactRoute);
-app.use("/api/posts", postRoute)
+app.use("/api/doctors", doctorRoute);
+app.use("/api/appointments", appointmentRoute);
+app.use("/api/admin", adminRoute);
+
+app.use((req, res) => {
+  return res.status(404).json({ success: false, message: "API endpoint not found." });
+});
 
 export default app;

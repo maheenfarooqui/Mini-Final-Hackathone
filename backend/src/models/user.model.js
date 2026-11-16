@@ -1,54 +1,54 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-username:{
-        type: String,
-        unique: true,
-        required:true
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    email:  {
-        type: String,
-        unique: true,
-        required:true
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      select: false,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
     password: {
-        type: String,
-        required:false
+      type: String,
+      required: true,
+      select: false,
     },
-    googleId: {
-    type: String,
-    sparse: true,
-    unique: true,
-  },
-
-  avatar: {
-    type: String,
-  },
-    role:{
-        type: String,
-        default: "user",
-        enum:["user","admin"]
-
+    role: {
+      type: String,
+      enum: ["admin", "doctor", "patient"],
+      default: "patient",
+      required: true,
     },
-cart:[
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-          default: 1,
-        },
-      },
-    ],
-
-
-
-});
+    specialization: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    experience: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
+);
 
 const userModel = mongoose.model("user", userSchema);
+
 export default userModel;

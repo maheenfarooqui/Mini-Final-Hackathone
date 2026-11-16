@@ -1,162 +1,147 @@
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
 dotenv.config();
-async function registerUser(req, res) {
-  try {
-    const { username, email, password, role } = req.body;
-    const userAlreadyExists = await userModel.findOne({
-      $or: [{ username }, { email }],
-    });
 
-    if (userAlreadyExists) {
-      return res.status(409).json({
-        message: "User Already Exists",
+function getJwtSecret() {
+  return process.env.JWT_SECRET || process.env.JWTSECRECT_KEY;
+}
+
+function setAuthCookie(res, token) {
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+function publicUser(user) {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    specialization: user.specialization,
+    experience: user.experience,
+    isActive: user.isActive,
+  };
+}
+
+function createToken(user) {
+  const secret = getJwtSecret();
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured.");
+  }
+  return jwt.sign({ id: user._id.toString() }, secret, { expiresIn: "7d" });
+}
+
+export async function registerUser(req, res) {
+  try {
+    const { name, email, password } = req.body;
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof email !== "string" ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ||
+      typeof password !== "string" ||
+      password.length < 8
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, a valid email, and a password of at least 8 characters are required.",
       });
     }
+    if (!getJwtSecret()) {
+      console.error("JWT_SECRET is not configured.");
+      return res.status(500).json({ success: false, message: "Authentication is not configured." });
+    }
 
-    const hash = await bcrypt.hash(password, 12);
+    const normalizedEmail = email.trim().toLowerCase();
+    const exists = await userModel.exists({ email: normalizedEmail });
+    if (exists) {
+      return res.status(409).json({ success: false, message: "An account with this email already exists." });
+    }
 
     const user = await userModel.create({
-      username,
-      email,
-      password: hash,
-      role,
+      name: name.trim(),
+      email: normalizedEmail,
+      username: normalizedEmail,
+      password: await bcrypt.hash(password, 12),
+      role: "patient",
     });
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWTSECRECT_KEY,
-    );
-    res.cookie("token", token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  path: "/",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-    res.status(201).json({ message: "User created sucessfully", user, token });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-}
+    const token = createToken(user);
+    setAuthCookie(res, token);
 
-async function loginUser(req, res) {
-  try {
-    const { username, email, password, role } = req.body;
-    const user = await userModel.findOne({
-      $or: [{ username }, { email }],
-    });
-    if (!user) {
-      return res.status(409).json({
-        message: "User Not Found",
-      });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        message: "Invalid password",
-      });
-    }
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWTSECRECT_KEY,
-    );
-    res.cookie("token", token);
-    res.status(201).json({ message: "User logIn sucessfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-}
-
-async function logoutUser(req,res){
- try {
-    res.clearCookie("token");
-
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
-      message: "Logged out successfully",
+      message: "Patient account created successfully.",
+      user: publicUser(user),
+      token,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: "An account with this email already exists." });
+    }
+    console.error("Registration error:", error);
+    return res.status(500).json({ success: false, message: "Unable to register account." });
   }
 }
 
-
-async function currentUser(req, res) {
+export async function loginUser(req, res) {
   try {
-    // Authentication middleware must set req.user
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized. Please log in.",
-      });
+    const identifier = req.body.email || req.body.username;
+    const { password } = req.body;
+    if (typeof identifier !== "string" || typeof password !== "string" || !password) {
+      return res.status(400).json({ success: false, message: "Email and password are required." });
     }
 
     const user = await userModel
-      .findById(userId)
-      .select("-password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      .findOne({ email: identifier.trim().toLowerCase() })
+      .select("+password");
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ success: false, message: "Invalid email or password." });
+    }
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, message: "This account has been deactivated." });
     }
 
+    const token = createToken(user);
+    setAuthCookie(res, token);
     return res.status(200).json({
       success: true,
-      message: "Current user fetched successfully",
-      user,
+      message: "Logged in successfully.",
+      user: publicUser(user),
+      token,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    console.error("Login error:", error);
+    return res.status(500).json({ success: false, message: "Unable to log in." });
   }
 }
 
+export function logoutUser(req, res) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
+  return res.status(200).json({ success: true, message: "Logged out successfully." });
+}
 
-
-async function googleAuthCallback(req, res) {
+export async function currentUser(req, res) {
   try {
-    const user = req.user;
-
+    const user = await userModel.findById(req.user.id).select("-password -username");
     if (!user) {
-      return res.redirect("http://localhost:5173/login");
+      return res.status(404).json({ success: false, message: "User not found." });
     }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWTSECRECT_KEY
-    );
-
-    res.cookie("token", token);
-
-    return res.redirect("http://localhost:5173/");
+    return res.status(200).json({ success: true, user });
   } catch (error) {
-    console.log("Google Auth Error:", error);
-
-    return res.redirect("http://localhost:5173/login");
+    console.error("Current user lookup error:", error);
+    return res.status(500).json({ success: false, message: "Unable to fetch current user." });
   }
 }
-
-
-
-export { registerUser, loginUser ,logoutUser,currentUser ,googleAuthCallback};
