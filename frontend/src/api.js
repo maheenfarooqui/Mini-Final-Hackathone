@@ -1,7 +1,8 @@
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(
-  /\/+$/,
-  "",
-);
+const localApiBase =
+  typeof window === "undefined"
+    ? "http://localhost:3000/api"
+    : `${window.location.protocol}//${window.location.hostname}:3000/api`;
+const API_BASE = (import.meta.env.VITE_API_URL || localApiBase).replace(/\/+$/, "");
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {

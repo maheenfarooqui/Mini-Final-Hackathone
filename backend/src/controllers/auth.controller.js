@@ -19,10 +19,20 @@ function setAuthCookie(res, token) {
   });
 }
 
+function getDisplayName(user) {
+  if (typeof user.name === "string" && user.name.trim()) {
+    return user.name.trim();
+  }
+  if (typeof user.username === "string" && user.username.trim()) {
+    return user.username.trim();
+  }
+  return user.email?.split("@")[0] || "User";
+}
+
 function publicUser(user) {
   return {
     id: user._id,
-    name: user.name,
+    name: getDisplayName(user),
     email: user.email,
     role: user.role,
     specialization: user.specialization,
@@ -139,7 +149,9 @@ export async function currentUser(req, res) {
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
-    return res.status(200).json({ success: true, user });
+    const profile = user.toObject();
+    profile.name = getDisplayName(user);
+    return res.status(200).json({ success: true, user: profile });
   } catch (error) {
     console.error("Current user lookup error:", error);
     return res.status(500).json({ success: false, message: "Unable to fetch current user." });

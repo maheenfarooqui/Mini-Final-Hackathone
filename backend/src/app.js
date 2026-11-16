@@ -17,6 +17,7 @@ app.use(
       process.env.CLIENT_URL,
       "https://al-nahal.vercel.app",
       "http://localhost:5173",
+      "http://127.0.0.1:5173",
     ].filter(Boolean),
     credentials: true,
   })

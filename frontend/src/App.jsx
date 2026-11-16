@@ -210,6 +210,12 @@ const navByRole = {
 
 const roleTitles = { patient: "Patient portal", doctor: "Doctor portal", admin: "Admin portal" };
 
+function getDisplayName(user) {
+  const name = typeof user?.name === "string" ? user.name.trim() : "";
+  const emailName = typeof user?.email === "string" ? user.email.split("@")[0] : "";
+  return name || emailName || "User";
+}
+
 function greeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -218,6 +224,7 @@ function greeting() {
 }
 
 function Workspace({ user, onLogout }) {
+  const displayName = getDisplayName(user);
   const [section, setSection] = useState("overview");
   const [data, setData] = useState({ doctors: [], appointments: [], users: [], stats: null });
   const [busy, setBusy] = useState(false);
@@ -359,8 +366,8 @@ function Workspace({ user, onLogout }) {
           <span>Your care journey, all in one place.</span>
         </div>
         <button className="profile-mini" onClick={onLogout} title="Sign out">
-          <Avatar name={user.name} />
-          <span className="profile-mini-copy"><strong>{user.name}</strong><small>{roleTitles[user.role]}</small></span>
+          <Avatar name={displayName} />
+          <span className="profile-mini-copy"><strong>{displayName}</strong><small>{roleTitles[user.role]}</small></span>
           <Icon name="logout" size={17} />
         </button>
       </aside>
@@ -372,7 +379,7 @@ function Workspace({ user, onLogout }) {
           <div className="topbar-right">
             <span className="topbar-date"><Icon name="calendar" size={16} /> {new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>
             <span className="topbar-divider" />
-            <button className="topbar-user" onClick={onLogout} title="Sign out"><Avatar name={user.name} /><span>{user.name}</span><Icon name="logout" size={16} /></button>
+            <button className="topbar-user" onClick={onLogout} title="Sign out"><Avatar name={displayName} /><span>{displayName}</span><Icon name="logout" size={16} /></button>
           </div>
         </header>
 
@@ -424,7 +431,8 @@ function Workspace({ user, onLogout }) {
 }
 
 function Avatar({ name = "You Care", size = "" }) {
-  const initials = name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const safeName = typeof name === "string" ? name : "You Care";
+  const initials = safeName.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   return <span className={`avatar ${size}`}>{initials || "CP"}</span>;
 }
 
@@ -456,6 +464,7 @@ function StatusPill({ status }) {
 }
 
 function PatientOverview({ user, data, onFind, onBook, onAppointments }) {
+  const firstName = getDisplayName(user).split(/\s+/)[0];
   const appointments = data.appointments;
   const pending = appointments.filter((appointment) => appointment.status === "pending").length;
   const approved = appointments.filter((appointment) => appointment.status === "approved").length;
@@ -467,7 +476,7 @@ function PatientOverview({ user, data, onFind, onBook, onAppointments }) {
       <section className="welcome-banner patient-banner">
         <div className="welcome-copy">
           <Eyebrow>YOUR CARE, AT A GLANCE</Eyebrow>
-          <h1>Good to see you, {user.name.split(" ")[0]}<span className="wave">.</span></h1>
+          <h1>Good to see you, {firstName}<span className="wave">.</span></h1>
           <p>Taking care of yourself starts with one small step. What can we help with today?</p>
           <button className="button button-dark" onClick={onFind}>Find your doctor <Icon name="arrow" size={17} /></button>
         </div>
@@ -553,6 +562,7 @@ function DoctorCard({ doctor, index = 0, onBook }) {
 }
 
 function DoctorOverview({ user, appointments, onRequests }) {
+  const firstName = getDisplayName(user).split(/\s+/)[0];
   const pending = appointments.filter((item) => item.status === "pending").length;
   const approved = appointments.filter((item) => item.status === "approved").length;
   const rejected = appointments.filter((item) => item.status === "rejected").length;
@@ -562,7 +572,7 @@ function DoctorOverview({ user, appointments, onRequests }) {
       <section className="welcome-banner doctor-banner">
         <div className="welcome-copy">
           <Eyebrow>DOCTOR WORKSPACE</Eyebrow>
-          <h1>{greeting()}, Dr. {user.name.split(" ")[0]}<span className="wave">.</span></h1>
+          <h1>{greeting()}, Dr. {firstName}<span className="wave">.</span></h1>
           <p>Here is what's happening with your patients and appointment requests today.</p>
           <button className="button button-dark" onClick={onRequests}>Review requests <Icon name="arrow" size={17} /></button>
         </div>
@@ -584,13 +594,14 @@ function DoctorOverview({ user, appointments, onRequests }) {
 }
 
 function AdminOverview({ user, stats, appointments, onUsers, onAppointments }) {
+  const firstName = getDisplayName(user).split(/\s+/)[0];
   const recent = [...appointments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
   return (
     <>
       <section className="welcome-banner admin-banner">
         <div className="welcome-copy">
           <Eyebrow>CLINIC CONTROL CENTER</Eyebrow>
-          <h1>{greeting()}, {user.name.split(" ")[0]}<span className="wave">.</span></h1>
+          <h1>{greeting()}, {firstName}<span className="wave">.</span></h1>
           <p>A clear view of your clinic, the people in your care, and everything happening today.</p>
           <button className="button button-dark" onClick={onUsers}>Manage your team <Icon name="arrow" size={17} /></button>
         </div>
@@ -673,7 +684,7 @@ function UsersPage({ users, onAddDoctor, onMutate }) {
   const [query, setQuery] = useState("");
   const visibleUsers = users.filter((user) => {
     const matchesRole = role === "all" || user.role === role;
-    const matchesQuery = `${user.name} ${user.email} ${user.specialization || ""}`.toLowerCase().includes(query.toLowerCase());
+    const matchesQuery = `${getDisplayName(user)} ${user.email || ""} ${user.specialization || ""}`.toLowerCase().includes(query.toLowerCase());
     return matchesRole && matchesQuery;
   });
   return (
@@ -699,11 +710,11 @@ function UsersPage({ users, onAddDoctor, onMutate }) {
             <tbody>
               {visibleUsers.map((person) => (
                 <tr key={person._id}>
-                  <td><div className="table-person"><Avatar name={person.name} /><span><strong>{person.name}</strong><small>{person.email}</small></span></div></td>
+                  <td><div className="table-person"><Avatar name={getDisplayName(person)} /><span><strong>{getDisplayName(person)}</strong><small>{person.email}</small></span></div></td>
                   <td><span className={`role-tag role-${person.role}`}>{person.role}</span></td>
                   <td>{person.role === "doctor" ? person.specialization || "—" : "—"}</td>
                   <td><span className={`account-state ${person.isActive ? "account-active" : "account-inactive"}`}><i />{person.isActive ? "Active" : "Inactive"}</span></td>
-                  <td className="table-actions">{person.role !== "admin" && <div className="user-actions"><button className="text-action" onClick={() => onMutate("status", person._id, !person.isActive)}>{person.isActive ? "Deactivate" : "Activate"}</button><button className="delete-action" onClick={() => { if (window.confirm(`Delete ${person.name} and related appointments?`)) onMutate("delete", person._id); }} title="Delete user"><Icon name="close" size={17} /></button></div>}</td>
+                  <td className="table-actions">{person.role !== "admin" && <div className="user-actions"><button className="text-action" onClick={() => onMutate("status", person._id, !person.isActive)}>{person.isActive ? "Deactivate" : "Activate"}</button><button className="delete-action" onClick={() => { if (window.confirm(`Delete ${getDisplayName(person)} and related appointments?`)) onMutate("delete", person._id); }} title="Delete user"><Icon name="close" size={17} /></button></div>}</td>
                 </tr>
               ))}
             </tbody>
