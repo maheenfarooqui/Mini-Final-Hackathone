@@ -16,6 +16,8 @@ Public registration always creates a patient. Administrators create doctor accou
 
 All protected routes accept a JWT in an `Authorization: Bearer <token>` header or the `token` HTTP-only cookie.
 
+Use `GET /` to confirm that the API is deployed and `GET /api/health` to confirm its MongoDB connection.
+
 | Method | Endpoint | Access |
 | --- | --- | --- |
 | POST | `/api/auth/register` | Public |
