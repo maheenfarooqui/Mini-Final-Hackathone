@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, MotionConfig } from "framer-motion";
 import { api } from "./api.js";
 
 const icons = {
@@ -36,12 +37,51 @@ function Icon({ name, size = 20 }) {
   );
 }
 
-function Brand({ compact = false }) {
+function Brand({ compact = false, animated = false }) {
+  const Mark = animated ? motion.span : "span";
+
   return (
     <div className={`brand ${compact ? "brand-compact" : ""}`}>
-      <span className="brand-mark"><Icon name="doctor" size={23} /></span>
-      <span className="brand-name">You <span>Care</span><small>CLINIC MANAGEMENT</small></span>
+      <Mark
+        className="brand-mark"
+        {...(animated ? {
+          animate: { scale: [1, 1.07, 1] },
+          transition: { duration: 3.4, repeat: Infinity, ease: "easeInOut" },
+          whileHover: { rotate: -5 },
+        } : {})}
+      >
+        <Icon name="doctor" size={23} />
+      </Mark>
+      <span className={`brand-name ${animated ? "brand-name-typewriter" : ""}`}>
+        {animated ? (
+          <span className="brand-typewriter-wrap">
+            <span className="brand-typewriter-ghost" aria-hidden="true">You <span>Care</span></span>
+            <span className="brand-typewriter-text" aria-hidden="true">You <span>Care</span></span>
+          </span>
+        ) : <>You <span>Care</span></>}
+        <small>CLINIC MANAGEMENT</small>
+      </span>
     </div>
+  );
+}
+
+function WhatsAppButton() {
+  const message = encodeURIComponent("Hello, I would like to know more about You Care Clinic.");
+
+  return (
+    <a
+      className="whatsapp-float"
+      href={`https://wa.me/923312276707?text=${message}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat with You Care on WhatsApp"
+      title="Chat with us on WhatsApp"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.611-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.372-.01-.57-.01-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.04 21.67h-.004a9.68 9.68 0 0 1-4.93-1.34l-.354-.21-3.66.96.977-3.57-.23-.366a9.64 9.64 0 0 1-1.48-5.146c.002-5.35 4.355-9.703 9.71-9.703a9.65 9.65 0 0 1 6.87 2.85 9.65 9.65 0 0 1 2.84 6.88c-.002 5.35-4.355 9.7-9.74 9.7M20.6 3.44A12.03 12.03 0 0 0 12.04 0C5.39 0 0 5.39-.003 12.04c0 2.12.55 4.19 1.6 6.02L-.1 24l6.09-1.6a12.02 12.02 0 0 0 6.04 1.63h.005c6.65 0 12.04-5.39 12.04-12.04 0-3.22-1.25-6.25-3.53-8.55" />
+      </svg>
+      <span className="whatsapp-tooltip">Chat with us</span>
+    </a>
   );
 }
 
@@ -81,18 +121,21 @@ function App() {
     return <div className="boot-screen"><span className="loader" /><p>Getting your clinic ready...</p></div>;
   }
   if (!user) {
-    if (!authMode) return <LandingPage onAuth={setAuthMode} />;
+    if (!authMode) return <><LandingPage onAuth={setAuthMode} /><WhatsAppButton /></>;
     return (
-      <AuthScreen
-        key={authMode}
-        initialMode={authMode}
-        onAuth={setUser}
-        onBackToHome={() => setAuthMode(null)}
-        notice={authNotice}
-      />
+      <>
+        <AuthScreen
+          key={authMode}
+          initialMode={authMode}
+          onAuth={setUser}
+          onBackToHome={() => setAuthMode(null)}
+          notice={authNotice}
+        />
+        <WhatsAppButton />
+      </>
     );
   }
-  return <Workspace key={user.id || user._id} user={user} onLogout={handleLogout} />;
+  return <><Workspace key={user.id || user._id} user={user} onLogout={handleLogout} /><WhatsAppButton /></>;
 }
 
 function LandingPage({ onAuth }) {
@@ -104,9 +147,12 @@ function LandingPage({ onAuth }) {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <main className="landing-page" id="top">
       <header className="landing-header">
-        <a className="landing-logo" href="#top" aria-label="You Care home"><Brand /></a>
+        <motion.a className="landing-logo" href="#top" aria-label="You Care home" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
+          <Brand animated />
+        </motion.a>
         <button
           className={`landing-menu ${menuOpen ? "landing-menu-open" : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -120,39 +166,39 @@ function LandingPage({ onAuth }) {
           <a href="#steps" onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="#why-you-care" onClick={() => setMenuOpen(false)}>Why You Care</a>
         </nav>
-        <div className="landing-actions">
+        <motion.div className="landing-actions" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.12 }}>
           <button className="landing-login" onClick={() => startAuth("login")}>Sign in</button>
-          <button className="button button-primary landing-book" onClick={() => startAuth("register")}>
+          <motion.button className="button button-primary landing-book" onClick={() => startAuth("register")} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
             Book an appointment <Icon name="arrow" size={16} />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </header>
 
       <section className="landing-hero">
-        <div className="landing-copy">
+        <motion.div className="landing-copy" initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.65, ease: "easeOut" }}>
           <Eyebrow><span className="live-dot" /> CARE THAT FITS YOUR LIFE</Eyebrow>
           <h1>Good care<br />starts with <em>You.</em></h1>
           <p>Find a doctor who listens, request a visit in minutes, and keep your care journey in one calm place.</p>
           <div className="landing-hero-actions">
-            <button className="button button-dark" onClick={() => startAuth("register")}>
+            <motion.button className="button button-dark" onClick={() => startAuth("register")} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
               Book your appointment <Icon name="arrow" size={17} />
-            </button>
+            </motion.button>
             <a className="landing-explore" href="#care">Explore our care <Icon name="arrow" size={16} /></a>
           </div>
           <div className="landing-reassurance">
             <span className="reassurance-icon"><Icon name="shield" size={17} /></span>
             <span><strong>Your care, your pace</strong><small>Simple booking. Clear updates. Here for you.</small></span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="landing-visual" aria-label="An illustration of connected, thoughtful healthcare">
-          <div className="landing-visual-backdrop" />
-          <div className="landing-orbit landing-orbit-a" />
-          <div className="landing-orbit landing-orbit-b" />
+        <motion.div className="landing-visual" aria-label="An illustration of connected, thoughtful healthcare" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}>
+          <motion.div className="landing-visual-backdrop" initial={{ scale: 1.06 }} animate={{ scale: 1 }} transition={{ duration: 1.2, ease: "easeOut" }} />
+          <motion.div className="landing-orbit landing-orbit-a" animate={{ scale: [1, 1.045, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
+          <motion.div className="landing-orbit landing-orbit-b" animate={{ scale: [1, 0.96, 1] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
           <div className="landing-square landing-square-blue" />
           <div className="landing-square landing-square-sky" />
           <div className="landing-dots" />
-          <div className="landing-doctor-illustration">
+          <motion.div className="landing-doctor-illustration" animate={{ y: [0, -5, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
             <div className="illustration-glow" />
             <div className="illustration-cross">+</div>
             <div className="illustration-person">
@@ -164,92 +210,107 @@ function LandingPage({ onAuth }) {
               <span className="illustration-stethoscope"><i /></span>
             </div>
             <div className="illustration-caption"><span>YOU CARE · YOUR CLINIC</span><strong>Here for<br />your health.</strong></div>
-          </div>
-          <div className="floating-care-card floating-visit-card">
+          </motion.div>
+          <motion.div className="floating-care-card floating-visit-card" animate={{ y: [0, -8, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}>
             <span className="floating-icon"><Icon name="calendar" size={18} /></span>
             <span><small>YOUR NEXT STEP</small><strong>Book a visit</strong></span>
             <Icon name="arrow" size={16} />
-          </div>
-          <div className="floating-care-card floating-doctor-card">
+          </motion.div>
+          <motion.div className="floating-care-card floating-doctor-card" animate={{ y: [0, 7, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.7 }}>
             <span className="floating-doctor-icon"><Icon name="doctor" size={17} /></span>
             <span><small>CARE, CONNECTED</small><strong>Your care team</strong></span>
             <span className="floating-status"><i /></span>
-          </div>
+          </motion.div>
           <span className="visual-side-note">A LITTLE MORE HUMAN <i /> A LOT MORE YOU</span>
-        </div>
+        </motion.div>
         <span className="landing-hero-index">01 <i /> 03</span>
       </section>
 
       <section className="landing-value-strip" id="why-you-care">
-        <div className="value-intro"><span className="eyebrow">A BETTER WAY TO GET CARE</span><strong>Thoughtful care.<br />Made simple.</strong></div>
-        <div className="value-item"><span className="value-icon"><Icon name="doctor" size={19} /></span><span><strong>The right doctor</strong><small>Explore doctors by specialty</small></span></div>
-        <div className="value-item"><span className="value-icon value-icon-green"><Icon name="calendar" size={19} /></span><span><strong>Easy appointments</strong><small>Request a visit when it suits you</small></span></div>
-        <div className="value-item"><span className="value-icon value-icon-lilac"><Icon name="activity" size={19} /></span><span><strong>Clear updates</strong><small>Know where your request stands</small></span></div>
+        <motion.div className="value-intro" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.45 }}>
+          <span className="eyebrow">A BETTER WAY TO GET CARE</span><strong>Thoughtful care.<br />Made simple.</strong>
+        </motion.div>
+        <motion.div className="value-item" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.4, delay: 0.08 }}>
+          <span className="value-icon"><Icon name="doctor" size={19} /></span><span><strong>The right doctor</strong><small>Explore doctors by specialty</small></span>
+        </motion.div>
+        <motion.div className="value-item" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.4, delay: 0.16 }}>
+          <span className="value-icon value-icon-green"><Icon name="calendar" size={19} /></span><span><strong>Easy appointments</strong><small>Request a visit when it suits you</small></span>
+        </motion.div>
+        <motion.div className="value-item" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.4, delay: 0.24 }}>
+          <span className="value-icon value-icon-lilac"><Icon name="activity" size={19} /></span><span><strong>Clear updates</strong><small>Know where your request stands</small></span>
+        </motion.div>
       </section>
 
       <section className="landing-care-section" id="care">
-        <div className="landing-section-heading">
+        <motion.div className="landing-section-heading" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }}>
           <Eyebrow>CARE, THE WAY IT SHOULD BE</Eyebrow>
           <h2>One place for your<br /><em>whole care journey.</em></h2>
           <p>Whether you're looking for a specialist or managing today's requests, You Care keeps the important things close.</p>
-        </div>
+        </motion.div>
         <div className="landing-care-cards">
-          <article className="landing-care-card care-card-patient">
+          <motion.article className="landing-care-card care-card-patient" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.5 }} whileHover={{ y: -5 }}>
             <span className="care-card-number">01 / FOR PATIENTS</span>
             <span className="care-card-icon"><Icon name="user" size={22} /></span>
             <h3>Your health,<br />on your terms.</h3>
             <p>Find a doctor, request an appointment, and keep track of every update.</p>
-            <button className="care-card-link" onClick={() => onAuth("register")}>Get started <Icon name="arrow" size={16} /></button>
+            <motion.button className="care-card-link" onClick={() => onAuth("register")} whileHover={{ x: 3 }}>Get started <Icon name="arrow" size={16} /></motion.button>
             <span className="care-card-shape care-card-shape-one" />
-          </article>
-          <article className="landing-care-card care-card-doctor">
+          </motion.article>
+          <motion.article className="landing-care-card care-card-doctor" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.5, delay: 0.12 }} whileHover={{ y: -5 }}>
             <span className="care-card-number">02 / FOR DOCTORS</span>
             <span className="care-card-icon"><Icon name="doctor" size={22} /></span>
             <h3>More time for<br />what matters.</h3>
             <p>Review appointment requests and keep your patient schedule in view.</p>
-            <button className="care-card-link" onClick={() => onAuth("login")}>Doctor sign in <Icon name="arrow" size={16} /></button>
+            <motion.button className="care-card-link" onClick={() => onAuth("login")} whileHover={{ x: 3 }}>Doctor sign in <Icon name="arrow" size={16} /></motion.button>
             <span className="care-card-shape care-card-shape-two" />
-          </article>
-          <article className="landing-care-card care-card-clinic">
+          </motion.article>
+          <motion.article className="landing-care-card care-card-clinic" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.5, delay: 0.24 }} whileHover={{ y: -5 }}>
             <span className="care-card-number">03 / FOR CLINICS</span>
             <span className="care-card-icon"><Icon name="shield" size={22} /></span>
             <h3>A clearer view<br />of your clinic.</h3>
             <p>Manage your care team and see clinic appointments in one place.</p>
-            <button className="care-card-link" onClick={() => onAuth("login")}>Admin sign in <Icon name="arrow" size={16} /></button>
+            <motion.button className="care-card-link" onClick={() => onAuth("login")} whileHover={{ x: 3 }}>Admin sign in <Icon name="arrow" size={16} /></motion.button>
             <span className="care-card-shape care-card-shape-three" />
-          </article>
+          </motion.article>
         </div>
       </section>
 
       <section className="landing-steps-section" id="steps">
-        <div className="steps-copy">
+        <motion.div className="steps-copy" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.5 }}>
           <Eyebrow>THREE SMALL STEPS</Eyebrow>
           <h2>Getting care<br />can feel <em>easy.</em></h2>
           <p>From finding a doctor to getting a response, we keep the next step clear.</p>
-          <button className="button button-primary" onClick={() => startAuth("register")}>
+          <motion.button className="button button-primary" onClick={() => startAuth("register")} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
             Start with an appointment <Icon name="arrow" size={16} />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
         <div className="steps-list">
-          <div className="step-item"><span className="step-number">01</span><span className="step-line" /><div><strong>Create your patient account</strong><p>Sign up once to get your own space for appointments and updates.</p></div></div>
-          <div className="step-item"><span className="step-number">02</span><span className="step-line" /><div><strong>Choose a doctor</strong><p>Browse active doctors and find a specialty that feels right.</p></div></div>
-          <div className="step-item"><span className="step-number">03</span><span className="step-line" /><div><strong>Request a visit</strong><p>Pick a date and time, tell the doctor what you need, and follow the status.</p></div></div>
+          <motion.div className="step-item" initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.35 }} transition={{ duration: 0.4 }}>
+            <span className="step-number">01</span><span className="step-line" /><div><strong>Create your patient account</strong><p>Sign up once to get your own space for appointments and updates.</p></div>
+          </motion.div>
+          <motion.div className="step-item" initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.35 }} transition={{ duration: 0.4, delay: 0.1 }}>
+            <span className="step-number">02</span><span className="step-line" /><div><strong>Choose a doctor</strong><p>Browse active doctors and find a specialty that feels right.</p></div>
+          </motion.div>
+          <motion.div className="step-item" initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.35 }} transition={{ duration: 0.4, delay: 0.2 }}>
+            <span className="step-number">03</span><span className="step-line" /><div><strong>Request a visit</strong><p>Pick a date and time, tell the doctor what you need, and follow the status.</p></div>
+          </motion.div>
         </div>
       </section>
 
-      <section className="landing-final-cta">
+      <motion.section className="landing-final-cta" initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.5 }}>
         <div className="final-cta-mark"><Icon name="doctor" size={24} /></div>
         <div><Eyebrow>YOUR NEXT STEP STARTS HERE</Eyebrow><h2>Ready to put your care first?</h2><p>Book a visit with a doctor who is ready to listen.</p></div>
-        <button className="button button-dark" onClick={() => startAuth("register")}>Book an appointment <Icon name="arrow" size={17} /></button>
+        <motion.button className="button button-dark" onClick={() => startAuth("register")} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>Book an appointment <Icon name="arrow" size={17} /></motion.button>
         <span className="final-cta-circle" />
-      </section>
+      </motion.section>
 
-      <footer className="landing-footer">
+      <motion.footer className="landing-footer" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.5 }}>
         <Brand compact />
         <span>Thoughtful care. Better days.</span>
         <button onClick={() => startAuth("login")}>Sign in <Icon name="arrow" size={15} /></button>
-      </footer>
+      </motion.footer>
     </main>
+    </MotionConfig>
   );
 }
 

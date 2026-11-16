@@ -36,6 +36,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .brand-name { font: 800 21px/1 var(--font-display); letter-spacing: -.8px; }
 .brand-name > span { color: var(--blue-strong); }
 .brand-name small { display: block; margin-top: 6px; color: #8b9aa5; font: 700 8px/1 "Roboto", sans-serif; letter-spacing: 1.65px; }
+.brand-name-typewriter > .brand-typewriter-wrap { color: inherit; }
+.brand-typewriter-wrap { position: relative; display: inline-block; vertical-align: bottom; }
+.brand-typewriter-ghost { visibility: hidden; white-space: nowrap; }
+.brand-typewriter-ghost > span, .brand-typewriter-text > span { color: var(--blue-strong); }
+.brand-typewriter-text { position: absolute; top: 0; left: 0; width: 0; overflow: hidden; color: inherit; white-space: nowrap; animation: brand-typewriter 6s steps(8, end) infinite; }
+.brand-typewriter-text::after { content: ""; position: absolute; top: 2px; right: 0; bottom: 2px; width: 1px; background: var(--blue-strong); animation: brand-caret .85s steps(1, end) infinite; }
+@keyframes brand-typewriter {
+  0%, 8% { width: 0; }
+  40%, 64% { width: 100%; }
+  96%, 100% { width: 0; }
+}
+@keyframes brand-caret {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
 .brand-compact { gap: 9px; }
 .brand-compact .brand-mark { width: 38px; height: 38px; }
 .brand-compact .brand-name { font-size: 19px; }
@@ -92,6 +107,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .mobile-brand { display: none; }
 .auth-footnote { position: absolute; right: 38px; bottom: 24px; color: #b0bbc3; font-size: 8px; font-weight: 700; letter-spacing: 1.5px; }
 .auth-footnote span { margin: 0 7px; color: var(--blue); }
+.whatsapp-float { width: 58px; height: 58px; position: fixed; z-index: 19; right: 22px; bottom: 22px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #25d366; box-shadow: 0 7px 22px #167d4238; transition: background .18s, transform .18s, box-shadow .18s; }
+.whatsapp-float::before { content: ""; position: absolute; z-index: -1; inset: -5px; border: 1px solid #25d3668c; border-radius: inherit; animation: whatsapp-pulse 2.4s ease-out infinite; }
+.whatsapp-float:hover { transform: translateY(-2px) scale(1.04); background: #1fbd5b; box-shadow: 0 10px 26px #167d4245; }
+.whatsapp-float:focus-visible { outline: 3px solid #25d36675; outline-offset: 4px; }
+.whatsapp-float svg { width: 29px; height: 29px; }
+.whatsapp-tooltip { position: absolute; right: calc(100% + 12px); bottom: 50%; border: 1px solid #e8eef1; border-radius: 5px; padding: 8px 11px; color: #405463; background: #fff; box-shadow: 0 5px 16px #223a4b18; font-size: 10px; font-weight: 600; opacity: 0; pointer-events: none; transform: translate(5px, 50%); transition: opacity .18s, transform .18s; white-space: nowrap; }
+.whatsapp-float:hover .whatsapp-tooltip, .whatsapp-float:focus-visible .whatsapp-tooltip { opacity: 1; transform: translate(0, 50%); }
+@keyframes whatsapp-pulse {
+  0% { opacity: .7; transform: scale(.88); }
+  75%, 100% { opacity: 0; transform: scale(1.25); }
+}
 
 .workspace { min-height: 100vh; background: var(--canvas); }
 .sidebar { position: fixed; z-index: 20; inset: 0 auto 0 0; width: 252px; display: flex; flex-direction: column; padding: 25px 17px 17px; border-right: 1px solid #e9eef1; background: white; }
@@ -323,8 +349,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .toast-check { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #218e6d; background: #e7f6ef; }
 .mobile-scrim { display: none; }
 
-.landing-page { min-height: 100vh; overflow: hidden; color: var(--ink); background: #fff; }
-.landing-header { min-height: 82px; position: relative; z-index: 15; display: flex; align-items: center; justify-content: space-between; gap: 26px; border-bottom: 1px solid #edf0f2; padding: 0 clamp(24px, 5vw, 78px); background: #fff; }
+.landing-page { min-height: 100vh; overflow: clip; color: var(--ink); background: #fff; }
+.landing-header { min-height: 82px; position: sticky; z-index: 15; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 26px; border-bottom: 1px solid #edf0f2; padding: 0 clamp(24px, 5vw, 78px); background: #ffffffed; backdrop-filter: blur(12px); }
+.landing-page #care, .landing-page #steps, .landing-page #why-you-care { scroll-margin-top: 100px; }
 .landing-logo { display: inline-flex; flex: 0 0 auto; text-decoration: none; }
 .landing-logo .brand-name { font-size: 23px; }
 .landing-nav { display: flex; align-items: center; gap: clamp(20px, 3.4vw, 54px); margin-left: auto; }
@@ -707,8 +734,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .booking-modal h2 { font-size: 22px; }
   .booking-fields { grid-template-columns: 1fr; }
   .toast { right: 12px; bottom: 12px; left: 12px; justify-content: center; }
+  .whatsapp-float { width: 54px; height: 54px; right: 16px; bottom: 16px; }
+  .whatsapp-float svg { width: 27px; height: 27px; }
+  .whatsapp-tooltip { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .brand-typewriter-text { width: 100%; animation: none; }
+  .brand-typewriter-text::after { display: none; }
+  .whatsapp-float::before { animation: none; }
 }
