@@ -14,11 +14,8 @@
 
 
 
-import dotenv from "dotenv";
+import "dotenv/config";
 import app from "./src/app.js";
-
-
-dotenv.config();
 
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 3000;
