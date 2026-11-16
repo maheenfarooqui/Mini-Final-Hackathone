@@ -49,6 +49,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [booting, setBooting] = useState(true);
   const [authNotice, setAuthNotice] = useState("");
+  const [authMode, setAuthMode] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -79,12 +80,181 @@ function App() {
   if (booting) {
     return <div className="boot-screen"><span className="loader" /><p>Getting your clinic ready...</p></div>;
   }
-  if (!user) return <AuthScreen onAuth={setUser} notice={authNotice} />;
+  if (!user) {
+    if (!authMode) return <LandingPage onAuth={setAuthMode} />;
+    return (
+      <AuthScreen
+        key={authMode}
+        initialMode={authMode}
+        onAuth={setUser}
+        onBackToHome={() => setAuthMode(null)}
+        notice={authNotice}
+      />
+    );
+  }
   return <Workspace key={user.id || user._id} user={user} onLogout={handleLogout} />;
 }
 
-function AuthScreen({ onAuth, notice }) {
-  const [mode, setMode] = useState("login");
+function LandingPage({ onAuth }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  function startAuth(mode) {
+    setMenuOpen(false);
+    onAuth(mode);
+  }
+
+  return (
+    <main className="landing-page" id="top">
+      <header className="landing-header">
+        <a className="landing-logo" href="#top" aria-label="You Care home"><Brand /></a>
+        <button
+          className={`landing-menu ${menuOpen ? "landing-menu-open" : ""}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+        >
+          <span /><span /><span />
+        </button>
+        <nav className={`landing-nav ${menuOpen ? "landing-nav-open" : ""}`} aria-label="Main navigation">
+          <a href="#care" onClick={() => setMenuOpen(false)}>Our care</a>
+          <a href="#steps" onClick={() => setMenuOpen(false)}>How it works</a>
+          <a href="#why-you-care" onClick={() => setMenuOpen(false)}>Why You Care</a>
+        </nav>
+        <div className="landing-actions">
+          <button className="landing-login" onClick={() => startAuth("login")}>Sign in</button>
+          <button className="button button-primary landing-book" onClick={() => startAuth("register")}>
+            Book an appointment <Icon name="arrow" size={16} />
+          </button>
+        </div>
+      </header>
+
+      <section className="landing-hero">
+        <div className="landing-copy">
+          <Eyebrow><span className="live-dot" /> CARE THAT FITS YOUR LIFE</Eyebrow>
+          <h1>Good care<br />starts with <em>You.</em></h1>
+          <p>Find a doctor who listens, request a visit in minutes, and keep your care journey in one calm place.</p>
+          <div className="landing-hero-actions">
+            <button className="button button-dark" onClick={() => startAuth("register")}>
+              Book your appointment <Icon name="arrow" size={17} />
+            </button>
+            <a className="landing-explore" href="#care">Explore our care <Icon name="arrow" size={16} /></a>
+          </div>
+          <div className="landing-reassurance">
+            <span className="reassurance-icon"><Icon name="shield" size={17} /></span>
+            <span><strong>Your care, your pace</strong><small>Simple booking. Clear updates. Here for you.</small></span>
+          </div>
+        </div>
+
+        <div className="landing-visual" aria-label="An illustration of connected, thoughtful healthcare">
+          <div className="landing-visual-backdrop" />
+          <div className="landing-orbit landing-orbit-a" />
+          <div className="landing-orbit landing-orbit-b" />
+          <div className="landing-square landing-square-blue" />
+          <div className="landing-square landing-square-sky" />
+          <div className="landing-dots" />
+          <div className="landing-doctor-illustration">
+            <div className="illustration-glow" />
+            <div className="illustration-cross">+</div>
+            <div className="illustration-person">
+              <span className="illustration-hair" />
+              <span className="illustration-face" />
+              <span className="illustration-neck" />
+              <span className="illustration-coat" />
+              <span className="illustration-shirt" />
+              <span className="illustration-stethoscope"><i /></span>
+            </div>
+            <div className="illustration-caption"><span>YOU CARE · YOUR CLINIC</span><strong>Here for<br />your health.</strong></div>
+          </div>
+          <div className="floating-care-card floating-visit-card">
+            <span className="floating-icon"><Icon name="calendar" size={18} /></span>
+            <span><small>YOUR NEXT STEP</small><strong>Book a visit</strong></span>
+            <Icon name="arrow" size={16} />
+          </div>
+          <div className="floating-care-card floating-doctor-card">
+            <span className="floating-doctor-icon"><Icon name="doctor" size={17} /></span>
+            <span><small>CARE, CONNECTED</small><strong>Your care team</strong></span>
+            <span className="floating-status"><i /></span>
+          </div>
+          <span className="visual-side-note">A LITTLE MORE HUMAN <i /> A LOT MORE YOU</span>
+        </div>
+        <span className="landing-hero-index">01 <i /> 03</span>
+      </section>
+
+      <section className="landing-value-strip" id="why-you-care">
+        <div className="value-intro"><span className="eyebrow">A BETTER WAY TO GET CARE</span><strong>Thoughtful care.<br />Made simple.</strong></div>
+        <div className="value-item"><span className="value-icon"><Icon name="doctor" size={19} /></span><span><strong>The right doctor</strong><small>Explore doctors by specialty</small></span></div>
+        <div className="value-item"><span className="value-icon value-icon-green"><Icon name="calendar" size={19} /></span><span><strong>Easy appointments</strong><small>Request a visit when it suits you</small></span></div>
+        <div className="value-item"><span className="value-icon value-icon-lilac"><Icon name="activity" size={19} /></span><span><strong>Clear updates</strong><small>Know where your request stands</small></span></div>
+      </section>
+
+      <section className="landing-care-section" id="care">
+        <div className="landing-section-heading">
+          <Eyebrow>CARE, THE WAY IT SHOULD BE</Eyebrow>
+          <h2>One place for your<br /><em>whole care journey.</em></h2>
+          <p>Whether you're looking for a specialist or managing today's requests, You Care keeps the important things close.</p>
+        </div>
+        <div className="landing-care-cards">
+          <article className="landing-care-card care-card-patient">
+            <span className="care-card-number">01 / FOR PATIENTS</span>
+            <span className="care-card-icon"><Icon name="user" size={22} /></span>
+            <h3>Your health,<br />on your terms.</h3>
+            <p>Find a doctor, request an appointment, and keep track of every update.</p>
+            <button className="care-card-link" onClick={() => onAuth("register")}>Get started <Icon name="arrow" size={16} /></button>
+            <span className="care-card-shape care-card-shape-one" />
+          </article>
+          <article className="landing-care-card care-card-doctor">
+            <span className="care-card-number">02 / FOR DOCTORS</span>
+            <span className="care-card-icon"><Icon name="doctor" size={22} /></span>
+            <h3>More time for<br />what matters.</h3>
+            <p>Review appointment requests and keep your patient schedule in view.</p>
+            <button className="care-card-link" onClick={() => onAuth("login")}>Doctor sign in <Icon name="arrow" size={16} /></button>
+            <span className="care-card-shape care-card-shape-two" />
+          </article>
+          <article className="landing-care-card care-card-clinic">
+            <span className="care-card-number">03 / FOR CLINICS</span>
+            <span className="care-card-icon"><Icon name="shield" size={22} /></span>
+            <h3>A clearer view<br />of your clinic.</h3>
+            <p>Manage your care team and see clinic appointments in one place.</p>
+            <button className="care-card-link" onClick={() => onAuth("login")}>Admin sign in <Icon name="arrow" size={16} /></button>
+            <span className="care-card-shape care-card-shape-three" />
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-steps-section" id="steps">
+        <div className="steps-copy">
+          <Eyebrow>THREE SMALL STEPS</Eyebrow>
+          <h2>Getting care<br />can feel <em>easy.</em></h2>
+          <p>From finding a doctor to getting a response, we keep the next step clear.</p>
+          <button className="button button-primary" onClick={() => startAuth("register")}>
+            Start with an appointment <Icon name="arrow" size={16} />
+          </button>
+        </div>
+        <div className="steps-list">
+          <div className="step-item"><span className="step-number">01</span><span className="step-line" /><div><strong>Create your patient account</strong><p>Sign up once to get your own space for appointments and updates.</p></div></div>
+          <div className="step-item"><span className="step-number">02</span><span className="step-line" /><div><strong>Choose a doctor</strong><p>Browse active doctors and find a specialty that feels right.</p></div></div>
+          <div className="step-item"><span className="step-number">03</span><span className="step-line" /><div><strong>Request a visit</strong><p>Pick a date and time, tell the doctor what you need, and follow the status.</p></div></div>
+        </div>
+      </section>
+
+      <section className="landing-final-cta">
+        <div className="final-cta-mark"><Icon name="doctor" size={24} /></div>
+        <div><Eyebrow>YOUR NEXT STEP STARTS HERE</Eyebrow><h2>Ready to put your care first?</h2><p>Book a visit with a doctor who is ready to listen.</p></div>
+        <button className="button button-dark" onClick={() => startAuth("register")}>Book an appointment <Icon name="arrow" size={17} /></button>
+        <span className="final-cta-circle" />
+      </section>
+
+      <footer className="landing-footer">
+        <Brand compact />
+        <span>Thoughtful care. Better days.</span>
+        <button onClick={() => startAuth("login")}>Sign in <Icon name="arrow" size={15} /></button>
+      </footer>
+    </main>
+  );
+}
+
+function AuthScreen({ onAuth, notice, initialMode = "login", onBackToHome }) {
+  const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -125,6 +295,7 @@ function AuthScreen({ onAuth, notice }) {
       </section>
 
       <section className="auth-panel">
+        <button className="auth-back" onClick={onBackToHome}><span aria-hidden="true">←</span> Back to You Care</button>
         <div className="mobile-brand"><Brand /></div>
         <div className="auth-card">
           <span className="eyebrow">WELCOME TO YOU CARE</span>
