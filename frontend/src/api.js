@@ -8,13 +8,16 @@ const API_BASE = configuredApiBase
     ? configuredApiBase
     : `${configuredApiBase}/api`
   : localApiBase;
+const TOKEN_KEY = "you-care-session-token";
 
 async function request(path, options = {}) {
+  const token = typeof window === "undefined" ? null : window.sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     credentials: "include",
     headers: {
       ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -34,10 +37,26 @@ function patch(path, body) {
   return request(path, { method: "PATCH", body: JSON.stringify(body) });
 }
 
+async function authenticate(path, credentials) {
+  const result = await post(path, credentials);
+  if (result.token && typeof window !== "undefined") {
+    window.sessionStorage.setItem(TOKEN_KEY, result.token);
+  }
+  return result;
+}
+
 export const api = {
-  login: (credentials) => post("/auth/login", credentials),
-  register: (details) => post("/auth/register", details),
-  logout: () => post("/auth/logout", {}),
+  login: (credentials) => authenticate("/auth/login", credentials),
+  register: (details) => authenticate("/auth/register", details),
+  logout: async () => {
+    try {
+      return await post("/auth/logout", {});
+    } finally {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(TOKEN_KEY);
+      }
+    }
+  },
   me: () => request("/auth/me"),
   doctors: (search = "") =>
     request(`/doctors${search ? `?search=${encodeURIComponent(search)}` : ""}`),

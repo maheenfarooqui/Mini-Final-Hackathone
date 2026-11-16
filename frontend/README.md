@@ -12,7 +12,7 @@ The frontend connects to the current host on port `3000` by default. To use anot
 VITE_API_URL=https://your-backend.example
 ```
 
-The API uses the backend's HTTP-only authentication cookie. The browser requests include credentials, so configure the backend `CLIENT_URL` to match the deployed frontend origin exactly.
+The API uses a Bearer token stored for the current browser tab, with the backend's HTTP-only cookie as a fallback. Configure the backend `CLIENT_URL` to match the deployed frontend origin exactly.
 
 ## Available scripts
 
